@@ -1,0 +1,258 @@
+---
+title: "01: proteinGroups.txt file analysis"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+# Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(dplyr)
+library(here)
+library(DEP)
+library(DT)
+```
+
+# Data input
+
+Raw spectra were processed using the MaxQuant software, and the output, **proteinGroups.txt** file is used for further post-processing using the DEP R package.
+
+```{r data-input, message=FALSE, warning=FALSE}
+data <- read.delim(here('data', 'proteinGroups.txt'))
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+#dir.create(here('outputs', '01_DEP-processing'))
+```
+
+
+# Data preparation
+
+## Contaminants filtering
+
+```{r contaminants-filtering, message=FALSE, warning=FALSE}
+data <- data %>%
+  filter(Reverse != "+") %>%
+  filter(!grepl("cRAP", Majority.protein.IDs)) %>%
+  filter(Only.identified.by.site != "+") %>%
+  filter(!grepl("keratin", Fasta.headers)) %>%
+  filter(!grepl("Keratin", Fasta.headers)) 
+```
+
+## Unique identifiers
+
+```{r unique-identifiers, message=FALSE, warning=FALSE}
+data_unique <- make_unique(data, "Gene.names", "Protein.IDs", delim = ";")
+```
+
+## BirA* binders filtering
+
+To further filter out the proteins, which are unspecifically binding BirA* ligase, we took advantage of the CRAPOME resource within REPRINT.
+
+For each BioID protocol employing BirA*-FLAG, a representative experiment (first in the order) was chosen. Altogether, 8 datasets were gathered and used for denoting BirA interactors.
+
+A protein was considered to be BirA-sticky in case it was present in more than 5 experiments and had average spectra value > 20.
+
+```{r BirA-filtering, message=FALSE, warning=FALSE}
+# CRAPOME data input
+BirA <- read.delim(here('data', '1669124109_userCrapDB.txt'))
+
+BirA.sticky <- BirA %>%
+    filter(NUM_EXPT > 5) %>%
+    arrange(desc(AVE_SC)) %>%
+    filter(AVE_SC > 20)
+
+data.filtered <- data_unique %>%
+  left_join(., BirA.sticky %>% select(GENE, AVE_SC, NUM_EXPT), by = c("name" = "GENE")) %>%
+  filter(is.na(AVE_SC))
+```
+
+## Generate a SummarizedExperiment object
+Create **experimental design** and filter out only the columns containing protein intensities.
+
+```{r summarized-experiment, message=FALSE, warning=FALSE}
+# Create experimental design
+exp_design <- data.frame(
+  label = c("1R.EE.01", "1R.EE.02", "1R.EE.03", "1R.EE.04", "1R.EE.05", "1R.EE.06", "1R.EE.07", 
+            "1R.EE.08", "1R.EE.09", "1R.EE.10", "1R.EE.11", "1R.EE.12",
+            "2R.EE.01", "2R.EE.02", "2R.EE.03", "2R.EE.04", "2R.EE.05", "2R.EE.06", "2R.EE.07", 
+            "2R.EE.08", "2R.EE.09", "2R.EE.10", "2R.EE.11", "2R.EE.12",
+            "3R.01", "3R.02", "3R.03", "3R.04", "3R.05", "3R.06", "3R.07", "3R.08", "3R.09", 
+            "3R.10", "3R.11", "3R.12"),
+  condition = c("CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1",
+                "VANGL2", "VANGL2", "DVL3", "DVL3",
+                "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                "VANGL2", "VANGL2", "DVL3", "DVL3",
+                "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                "VANGL2", "VANGL2", "DVL3", "DVL3"),
+  #  replicate = rep(c(1:3), each=12)
+  replicate = c((rep(1:2, 6)), rep(3:4, 6), rep(5:6, 6) )
+)
+ 
+exp_design$label <- as.character(exp_design$label)
+exp_design$condition <- as.character(exp_design$condition)
+exp_design$replicate <- as.numeric(exp_design$replicate)
+
+# find out which columns contain Intensities
+intensity_columns <- grep("Intensity.", colnames(data_unique)) # get intensities column numbers
+data_se <- make_se(data.filtered, intensity_columns, exp_design)
+```
+
+# Missing values filtering 
+Plot a barplot of the protein identification overlap between samples
+```{r barplot-notfiltered, message=FALSE, warning=FALSE}
+plot_frequency(data_se)
+```
+
+Filter for proteins that are identified in **4/6 replicates** of at least **one** condition
+```{r filtering, message=FALSE, warning=FALSE}
+data_filt <- filter_proteins(data_se, type = "condition",thr = 2)
+plot_frequency(data_filt)
+```
+
+Plot a barplot of the number of identified proteins per samples
+```{r barplot-filtered, message=FALSE, warning=FALSE}
+plot_numbers(data_filt)
+```
+
+Plot a barplot of the protein identification overlap between samples
+```{r coverage-filtered, message=FALSE, warning=FALSE}
+plot_coverage(data_filt)
+```
+
+# Normalization
+
+The data is background corrected and normalized by **variance stabilizing transformation (vsn)**
+
+```{r normalization, message=FALSE, warning=FALSE}
+# Normalize the data by vsn
+data_norm_vsn <- normalize_vsn(data_filt)
+```
+
+## SD vs mean plots
+Plot standard deviations vs mean plots
+```{r sd-check, message=FALSE, warning=FALSE}
+meanSdPlot(data_norm_vsn)
+```
+
+## Boxplots
+Visualize normalization by boxplots for all samples before and after normalization
+```{r normalization-check, message=FALSE, warning=FALSE}
+plot_normalization(data_filt, data_norm_vsn)
+```
+
+# Missing values imputation
+
+Plot a heatmap of proteins with missing values
+```{r missing-values-check, message=FALSE, warning=FALSE}
+plot_missval(data_filt)
+```
+
+Plot intensity distributions and cumulative fraction of proteins with and without missing values
+```{r distribution, message=FALSE, warning=FALSE}
+plot_detect(data_filt)
+```
+
+Imputation of missing values:
+
+Missing values of **MNAR** type, so **man** imputation used: impute missing data using random draws from a manually defined left-shifted Gaussian distribution
+```{r imputation, message=FALSE, warning=FALSE}
+# rather setting the seed; 42 is just purely the Hitchhiker's Guide to Galaxy reference :)
+set.seed(42)
+data_man <- impute(data_norm_vsn, fun = "man", shift = 1.8, scale = 0.3)
+```
+
+Plot intensity distributions before and after imputation.
+```{r imputation-check, message=FALSE, warning=FALSE}
+plot_imputation(data_norm_vsn, data_man)
+```
+
+# Differential expression (LIMMA)
+## LIMMA test
+Adjustment of p-values done using **fdrtools** (by default)
+```{r limma, message=FALSE, warning=FALSE}
+# Perform LIMMA test
+data_diff_man <- test_diff(data_man, type = "manual",
+                       test = c("DVL3_vs_CTRL",
+                                "ROR1_vs_CTRL",
+                                "ROR2_vs_CTRL",
+                                "VANGL2_vs_CTRL",
+                                "PRICKLE1_vs_CTRL"))
+
+# Denote the significant proteins
+dep_man <- add_rejections(data_diff_man, alpha = 0.05, lfc = log2(2))
+```
+
+## P-values histogram
+For non-adjusted p-values
+```{r limma-p-histogram, message=FALSE, warning=FALSE}
+plot_p_hist(dep_man, adjusted = FALSE) # plot pvalues histogram
+```
+
+
+## PCA
+For 500 most variable proteins
+```{r limma-PCA, message=FALSE, warning=FALSE}
+plot_pca(dep_man, x = 1, y = 2, n = 500, point_size = 4) # plot PCA for 500 most variable proteins
+```
+
+## Correlation matrix
+```{r limma-correlation-matrix, message=FALSE, warning=FALSE}
+plot_cor(dep_man, significant = TRUE, lower = 0, upper = 1, pal = "Reds") # plot correlation
+```
+
+## Heatmap (intensities)
+```{r limma-heatmap, message=FALSE, warning=FALSE}
+svg(here('outputs', '01_DEP-processing', '01_DEP_heatmap.svg'))
+plot_heatmap(dep_man, type = "centered", kmeans = TRUE,  
+             k = 5, col_limit = 4, show_row_names = FALSE,
+             indicate = c("condition", "replicate"))
+graphics.off()
+
+data.heatmap <- plot_heatmap(dep_man, type = "centered", kmeans = TRUE,  
+             k = 5, col_limit = 4, show_row_names = TRUE,
+             indicate = c("condition", "replicate"), plot = FALSE)
+
+cluster4 <- data.frame(cluster4 = data.heatmap$protein[data.heatmap$k == 4])
+```
+
+## Heatmap (contrasts)
+```{r limma-heatmap-contrasts, message=FALSE, warning=FALSE}
+plot_heatmap(dep_man, type = "contrast", kmeans = TRUE,  
+             k = 6, col_limit = 4, show_row_names = FALSE,
+             indicate = c("condition", "replicate"))
+```
+
+## Adjusted pvalues (fdrtool)
+```{r volcano-adjusted-fdrtool, message=FALSE, warning=FALSE}
+plot_volcano(dep_man, contrast = "DVL3_vs_CTRL", label_size = 2, add_names = TRUE, adjusted = TRUE)
+plot_volcano(dep_man, contrast = "ROR1_vs_CTRL", label_size = 2, add_names = TRUE, adjusted = TRUE)
+plot_volcano(dep_man, contrast = "ROR2_vs_CTRL", label_size = 2, add_names = TRUE, adjusted = TRUE)
+plot_volcano(dep_man, contrast = "VANGL2_vs_CTRL", label_size = 2, add_names = TRUE, adjusted = TRUE)
+plot_volcano(dep_man, contrast = "PRICKLE1_vs_CTRL", label_size = 2, add_names = TRUE, adjusted = TRUE)
+```
+
+# Summary tables
+```{r summary-tables, message=FALSE, warning=FALSE}
+
+# Generate a results table
+data_results <- get_results(dep_man)
+write.csv(data_results, here('outputs',  '01_DEP-processing', '01_DEP-results-table.csv'))
+
+# Generate a wide data.frame
+df_wide <- get_df_wide(dep_man)
+
+# Generate a long data.frame
+df_long <- get_df_long(dep_man)
+
+# Save the data as RData
+save(data_results, file = here('outputs',  '01_DEP-processing', '01_DEP-results-table.RData'))
+save(df_wide, file = here('outputs',  '01_DEP-processing', '01_DEP-df-wide.RData'))
+save(df_long, file = here('outputs',  '01_DEP-processing', '01_DEP-df-long.RData'))
+save(dep_man, file = here('outputs',  '01_DEP-processing', '01_DEP-dep-object.RData'))
+save(data.heatmap, file = here('outputs',  '01_DEP-processing', '01_DEP-heatmap-clusters.RData'))
+```

@@ -1,0 +1,165 @@
+---
+title: "02: General Wnt/PCP interactome description"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+# Remove all objects from the workspace
+
+```{r clear-workspace, message=FALSE, warning=FALSE}
+rm(list = ls())
+```
+
+# Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(dplyr)
+library(here)
+library(DEP)
+library(factoextra)
+library(tibble)
+library(tidyr)
+library(UpSetR)
+```
+
+# Data input
+
+```{r data-input, message=FALSE, warning=FALSE}
+load(here('outputs',  '01_DEP-processing', '01_DEP-df-wide.RData'))
+load(here('outputs', '01_DEP-processing', '01_DEP-results-table.RData'))
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+#dir.create(here('outputs', '02_PCP-interactome-description'))
+```
+
+
+# Perform a PCA on samples
+
+```{r PCA, message=FALSE, warning=FALSE}
+tmp <- df_wide %>%
+  select(name, CTRL_1:DVL3_6) %>%
+  rowwise() %>%
+  mutate(most_variable = sd(c_across(CTRL_1:DVL3_6))) %>%
+  arrange(desc(most_variable)) %>%
+  ungroup() %>%
+  slice_head(n = 500) %>%
+  select(-most_variable) %>%
+  column_to_rownames(var = "name") %>%
+  t() %>%
+  as.data.frame() %>%
+  mutate(condition = c("CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1",
+                "VANGL2", "VANGL2", "DVL3", "DVL3",
+                "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                "VANGL2", "VANGL2", "DVL3", "DVL3",
+                "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                "VANGL2", "VANGL2", "DVL3", "DVL3")) 
+
+ #svg(here('outputs', '02_PCP-interactome-description', '02_PCA-conditions.svg'))
+ prcomp(tmp[, -501], center = TRUE, scale = FALSE) %>%
+    fviz_pca_ind(habillage = tmp$condition, palette = c("#8491B4FF", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF",  "#E64B35FF")) 
+# dev.off()
+```
+
+# Number of upregulated proteins per bait
+
+Find which proteins are upregulated based on threshold of logFC > 1 and adjusted p-value < 0.05
+```{r upregulated-proteins, message=FALSE, warning=FALSE}
+data_results <- data_results %>%
+  mutate(up_DVL3 = ifelse(DVL3_vs_CTRL_p.adj < 0.05 & DVL3_vs_CTRL_ratio > 1, 1, 0)) %>%
+  mutate(up_ROR1 = ifelse(ROR1_vs_CTRL_p.adj < 0.05 & ROR1_vs_CTRL_ratio > 1, 1, 0)) %>%
+  mutate(up_ROR2 = ifelse(ROR2_vs_CTRL_p.adj < 0.05 & ROR2_vs_CTRL_ratio > 1, 1, 0)) %>%
+  mutate(up_PRICKLE1 = ifelse(PRICKLE1_vs_CTRL_p.adj < 0.05 & PRICKLE1_vs_CTRL_ratio > 1, 1, 0)) %>%
+  mutate(up_VANGL2 = ifelse(VANGL2_vs_CTRL_p.adj < 0.05 & VANGL2_vs_CTRL_ratio > 1, 1, 0))
+```
+
+Plot the barplot of upregulated proteins per bait
+```{r upregulated-proteins-per-bait, message=FALSE, warning=FALSE}
+#svg(here('outputs', '02_PCP-interactome-description', '02_barplot-upregulated-preys-per-bait.svg'))
+data_results %>%
+  select(name, starts_with("up")) %>%
+  pivot_longer(cols = up_DVL3:up_VANGL2, names_to = "bait", values_to = "upregulated") %>%
+  mutate(bait = gsub("up_", "", bait)) %>%
+  group_by(bait) %>%
+  summarise(n_upregulated = sum(upregulated)) %>%
+  ggplot(aes(x = reorder(bait, -n_upregulated), y = n_upregulated, fill = bait)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  theme_minimal(base_size = 17)+
+  labs(x = "Bait", y = "Number of upregulated preys") +
+  scale_fill_manual(values = c( "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF",  "#E64B35FF"))
+#dev.off()
+```
+
+# UpSet plot of upregulated proteins
+
+UpSet plot of upregulated preys in particular baits.
+```{r  upset-plot, message=FALSE, warning=FALSE}
+#svg(here('outputs', '02_PCP-interactome-description', '02_upsetPlot-upregulated-preys.svg'))
+data_results %>%
+  select(starts_with("up_")) %>%
+  rename_with(~ sub("up_", "", .x), everything()) %>%
+  upset(., order.by = "freq")
+#dev.off()
+```
+
+# Human Cell Map localization
+
+In order to determine whether interactions of particular bait happen in a specific cellular compartment, upregulated preys were mapped to the human cell map experimental data.
+
+```{r human-cell-map, message=FALSE, warning=FALSE}
+# Data input for Human Cell Map:
+hcm <- read.delim(here('data', 'preys-latest.txt'))
+
+# Map onto the Human Cell Map
+data.hcm <- data_results %>%
+  left_join(., hcm %>% select(symbol, MMF.localization), by = c("name" = "symbol"))
+
+data.hcm[is.na(data.hcm)] <- "-" #If protein was not mapped, use "-" instead
+
+# Split the MMF.localization by "," in case there are multiple localizations mapped to the same protein
+data.hcm <-  data.hcm %>%   
+  mutate(NMF.loc = strsplit(as.character(MMF.localization), ", ")) %>% 
+  unnest(NMF.loc)
+
+# Create long table
+data.hcm <- data.hcm %>%
+  select(name, starts_with("up_"), NMF.loc) %>%
+  rename_with(~ sub("up_", "", .x), everything()) %>%
+  pivot_longer(cols = DVL3:VANGL2,
+               names_to = "bait",
+               values_to = "significant")
+
+#svg(here('outputs', '02_PCP-interactome-description', '02_facetBarplot-humancellmap_multicolor.svg'))
+data.hcm %>%
+  group_by(bait, NMF.loc) %>%
+  summarise(n_preys = sum(significant)) %>%
+  filter(n_preys != 0) %>%
+  mutate(top_loc = case_when(
+    n_preys == max(n_preys) ~ "max",
+    TRUE ~ "")
+  ) %>%
+  mutate(top_localization = case_when(
+    top_loc == "max" & bait == "DVL3" ~ "DVL3",
+    top_loc == "max" & bait == "ROR1" ~ "ROR1",
+    top_loc == "max" & bait == "ROR2" ~ "ROR2",
+    top_loc == "max" & bait == "PRICKLE1" ~ "PRICKLE1",
+    top_loc == "max" & bait == "VANGL2" ~ "VANGL2",
+    TRUE ~ ""
+      )) %>%
+  ggplot(aes(x = NMF.loc, y = n_preys, fill = top_localization)) +
+  geom_bar(stat = "identity")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  labs(x = "Prey localization in Human Cell Map",
+       y = "Number of preys") + 
+  facet_grid(bait ~ .) + 
+  scale_fill_manual(values = c("#b8B8B8", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF","#E64B35FF" ))
+#dev.off()
+
+
+```
+

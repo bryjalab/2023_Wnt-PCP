@@ -1,0 +1,138 @@
+---
+title: "05: REPRINT analysis"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+# Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(dplyr)
+library(here)
+library(DEP)
+```
+
+# Data input
+
+```{r data-input, message=FALSE, warning=FALSE}
+load(here('outputs', '01_DEP-processing', '01_DEP-df-wide.RData'))
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+#dir.create(here('outputs', '03_REPRINT-analysis'))
+```
+
+# Filter relevant columns
+
+```{r data-filtering, message=FALSE, warning=FALSE}
+# Filter protein ID, gene name, length of protein sequence, and MS/MS counts
+data <- df_wide %>%
+  select(ID, name, Sequence.length,
+         starts_with("MS.MS.count."))
+
+# Renaming columns
+data <- data %>%
+  rename('PROTID' = 'ID',
+         'GENEID' = 'name',
+         'PROTEIN' = 'Sequence.length',
+         'CTRL_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.01' ,
+         'CTRL_02_NUMSPECSTOT' =	'MS.MS.count.1R.EE.02' ,
+         'ROR1_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.03' ,
+         'ROR1_02_NUMSPECSTOT' =	'MS.MS.count.1R.EE.04' ,
+         'ROR2_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.05' ,
+         'ROR2_02_NUMSPECSTOT' = 'MS.MS.count.1R.EE.06' ,
+         'PRICKLE1_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.07' ,
+         'PRICKLE1_02_NUMSPECSTOT' = 'MS.MS.count.1R.EE.08' ,
+         'VANGL2_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.09' ,
+         'VANGL2_02_NUMSPECSTOT' = 'MS.MS.count.1R.EE.10' ,
+         'DVL3_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.11' ,
+         'DVL3_02_NUMSPECSTOT' =	'MS.MS.count.1R.EE.12' ,
+         'CTRL_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.01' ,
+         'CTRL_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.02' ,
+         'ROR1_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.03' ,
+         'ROR1_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.04' ,
+         'ROR2_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.05' ,
+         'ROR2_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.06' ,
+         'PRICKLE1_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.07', 
+         'PRICKLE1_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.08' ,
+         'VANGL2_03_NUMSPECSTOT' = 'MS.MS.count.2R.EE.09' ,
+         'VANGL2_04_NUMSPECSTOT' = 'MS.MS.count.2R.EE.10' ,
+         'DVL3_03_NUMSPECSTOT' = 'MS.MS.count.2R.EE.11' ,
+         'DVL3_04_NUMSPECSTOT' = 'MS.MS.count.2R.EE.12' ,
+         'CTRL_05_NUMSPECSTOT' = 'MS.MS.count.3R.01' ,
+         'CTRL_06_NUMSPECSTOT' = 'MS.MS.count.3R.02' ,
+         'ROR1_05_NUMSPECSTOT' = 'MS.MS.count.3R.03' ,
+         'ROR1_06_NUMSPECSTOT' = 'MS.MS.count.3R.04' ,
+         'ROR2_05_NUMSPECSTOT' = 'MS.MS.count.3R.05' ,
+         'ROR2_06_NUMSPECSTOT' = 'MS.MS.count.3R.06' ,
+         'PRICKLE1_05_NUMSPECSTOT' =	'MS.MS.count.3R.07', 
+         'PRICKLE1_06_NUMSPECSTOT' =	'MS.MS.count.3R.08' ,
+         'VANGL2_05_NUMSPECSTOT' = 'MS.MS.count.3R.09' ,
+         'VANGL2_06_NUMSPECSTOT' = 'MS.MS.count.3R.10' ,
+         'DVL3_05_NUMSPECSTOT' = 'MS.MS.count.3R.11' ,
+         'DVL3_06_NUMSPECSTOT' ='MS.MS.count.3R.12' ) 
+```
+
+# Prepare REPRINT output
+
+```{r prepare-reprint, message=FALSE, warning=FALSE}
+# Add additional row based on REPRINT requirements
+vec <- colnames(data)
+vec[1:3] <- "--"
+vec <- gsub("(\\_\\d+\\_[A-Z]+)", "", vec)
+vec <- gsub("CTRL", "C", vec)
+
+# join the row with dataframe
+joined <- rbind (vec, data)
+
+# write txt file
+write.table(joined, here('outputs', '03_REPRINT-analysis', '03_REPRINT-data-input.txt'), sep = '\t', row.names = FALSE, quote = FALSE)
+
+```
+
+# REPRINT settings description
+
+Run on 2023-01-02
+
+**Upload data**
+
+* Organism: H.Sapiens
+* Experiment type: Proximity Dependent Biotinylation
+* Quantitation type: SPC
+* File to upload: 05_REPRINT-data-input.txt
+* File type: matrix
+* File format: tab-separated
+
+**Select controls**
+
+None
+
+**Score interactions**
+
+Empirical Fold Change Score (--default settings)
+
+* Primary Score: user controls ; combining replicates - average ; nr of virtual controls - 10,
+* Secondary Score: all controls ; combining replicates - geometric ; nr of virtual controls - 3,
+
+Probabilistic SAINT Score
+
+* SaintExpress
+* user controls ; combining replicates - average; nr of virtual controls - 10,
+* SAINT options: n-burn 2000, n-iter 4000, LowMode 0, MinFold 1, Normalize 1
+
+Interaction Specificity Score and Enrichment cut offs were not used.
+
+Job name: Wnt/PCP BioID
+
+**Results**
+
+Saved to `analysis/outputs/03_REPRINT-analysis`
+
+* Raw SAINT results: 16544.output
+* ProHits input: 16544_prohitsViz_input -> 16544_results.txt
+* Cytoscape input: 16544.gml
+* Matrix format: 16544_matrix.tab -> saved as .txt

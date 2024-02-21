@@ -26,7 +26,9 @@ data <- read.delim(here('data', 'proteinGroups.txt'))
 
 Prepare a folder for the outputs
 ```{r outputs-folder, message=FALSE, warning=FALSE}
-#dir.create(here('outputs', '01_DEP-processing'))
+if (!dir.exists(here('outputs', '01_DEP-processing'))){
+  dir.create(here('outputs', '01_DEP-processing'))
+}
 ```
 
 
@@ -72,7 +74,7 @@ data.filtered <- data_unique %>%
 ```
 
 ## Generate a SummarizedExperiment object
-Create **experimental design** and filter out only the columns containing protein intensities.
+Create **experimental design** and filter only the columns containing protein intensities.
 
 ```{r summarized-experiment, message=FALSE, warning=FALSE}
 # Create experimental design

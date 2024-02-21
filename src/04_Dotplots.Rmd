@@ -1,0 +1,202 @@
+---
+title: "04: Dotplots"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+# Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(dplyr)
+library(here)
+library(DEP)
+library(ggplot2)
+library(tidyverse)
+library(ggdendro)
+library(cowplot)
+library(ggtree)
+```
+
+# Data input
+
+```{r data-input, message=FALSE, warning=FALSE}
+data <- read.delim(here('data', '16544_matrix.txt'))
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+#dir.create(here('outputs', '03_REPRINT-analysis'))
+if (!dir.exists(here('outputs', '04_Dotplots'))){
+  dir.create(here('outputs', '04_Dotplots'))
+}
+```
+
+Same filters as were used previously for dotplots applied:
+- protein is retained if SAINT probability (SP) was in at least one bait >=0.8 (primary score)
+- secondary score is used only for visualization
+
+```{r data-filtering, message=FALSE, warning=FALSE}
+data.filtered <- data %>%
+  filter(if_any(ends_with("SP"), ~ . >= 0.8))
+```
+
+# Transform data
+
+Create the same metrics as used in the Prohits visualization tool.
+
+```{r data-transformation, message=FALSE, warning=FALSE}
+# unique preys
+markers <- data.filtered$GENE %>% unique()
+
+data.filtered <- data.filtered %>%
+    select(GENE, contains("SP"), contains("_AVG_"))
+  
+# compute relative abundance
+data.filtered <- data.filtered %>%
+  rowwise() %>%
+  mutate(DVL3_rel = DVL3_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(ROR1_rel = ROR1_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(ROR2_rel = ROR2_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(PRICKLE1_rel = PRICKLE1_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(VANGL2_rel = VANGL2_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) 
+
+# create long table
+data.long <- pivot_longer(data.filtered, -GENE, names_to = c("protein", ".value"), names_sep = "_")
+```
+
+# Dotplots
+
+Comment: in the Rmd file they look weird, it is preferred to plot them in R script and save manually from the Viewer
+
+```{r dotplots, message=FALSE, warning=FALSE}
+
+# dendrogram
+mat <- data.filtered %>%
+  select(contains("_AVG_"))
+
+row.names(mat) <- data.filtered$GENE
+clust <- hclust(dist(mat %>% as.matrix(), method = 'canberra'), method = 'ward.D') # hclust with distance matrix
+# for clustering used default option for ProHITS Dotplot
+
+# ddgram <- as.dendrogram(clust) # create dendrogram
+# ggtree_plot <- ggtree::ggtree(ddgram)
+
+# plot the dotplot
+data.long %>%
+  mutate(PreyF = factor(GENE, levels = clust$labels[clust$order])) %>% 
+  filter(rel > 0, AVG > 0) %>% 
+  mutate(SaintProbability = case_when(
+    SP >= 0.9 ~ "SP >= 0.9",
+    SP >= 0.7 ~ "SP >= 0.7",
+    TRUE ~ "ns"
+  )) %>%
+  ggplot(aes(protein, PreyF))+
+  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +  
+ # scale_fill_continuous(trans = 'reverse') +
+  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
+  scale_size_continuous(name = 'Relative abundance in %') +
+  scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
+  scale_x_discrete(name="Baits") +
+  scale_y_discrete(name="Preys") +
+  coord_fixed(ratio = 0.8) +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# plot_grid(ggtree_plot, NULL,p, nrow = 1, rel_widths = c(0.5,-0.05, 1), align = 'h')
+
+```
+
+# Cluster-wise dotplots
+
+```{r cluster-heatmap, message=FALSE, warning=FALSE}
+
+# Read the cluster data
+load(here('outputs',  '01_DEP-processing', '01_DEP-heatmap-clusters.RData'))
+
+# Filter only relevant columns (protein + cluster assignment)
+data.heatmap.filt <- data.heatmap %>% select(protein, k)
+```
+
+For each cluster, grep the proteins from the heatmap and order them alphabetically
+```{r cluster-dotplots, message=FALSE, warning=FALSE}
+# map clusters onto data.long
+data.long <- left_join(data.long, data.heatmap.filt, by = c("GENE" = "protein"))
+data.long$k[is.na(data.long$k)] <- "not.significant"
+
+# for (i in unique(data.long$k)) {
+# p <- data.long %>%
+#   filter(k == 1) %>%
+#   mutate(PreyF = factor(sort(GENE))) %>% 
+#   filter(rel > 0, AVG > 0) %>% 
+#   mutate(SaintProbability = case_when(
+#     SP >= 0.9 ~ "SP >= 0.9",
+#     SP >= 0.7 ~ "SP >= 0.7",
+#     TRUE ~ "ns"
+#   )) %>%
+#   ggplot(aes(protein, PreyF))+
+#   geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +  
+#  # scale_fill_continuous(trans = 'reverse') +
+#   scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
+#   scale_size_continuous(name = 'Relative abundance in %') +
+#   scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
+#   scale_x_discrete(name="Baits") +
+#   scale_y_discrete(name="Preys") +
+#   coord_fixed(ratio = 0.8) +
+#   theme_classic()+
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
+#   labs(title = 1)
+# 
+# svg(paste("dotplot_cluster", i, '.svg'))
+# print(p)
+# dev.off()
+# }
+
+# filter out the non-significant ones and change the order based on the clusters
+# saved manually with height 2600, same width
+
+data.long %>%
+#  filter(k != "not.significant") %>%
+  mutate(k = factor(k)) %>%
+  arrange(k) %>%
+  group_by(k) %>%
+  mutate(PreyF = factor(sort(GENE))) %>% 
+  filter(rel > 0, AVG > 0) %>%
+  mutate(SaintProbability = case_when(
+    SP >= 0.9 ~ "SP >= 0.9",
+    SP >= 0.7 ~ "SP >= 0.7",
+    TRUE ~ "ns"
+  )) %>%
+  ggplot(aes(protein, PreyF))+
+  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +
+  # scale_fill_continuous(trans = 'reverse') +
+  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
+  scale_size_continuous(name = 'Relative abundance in %') +
+  scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
+  scale_x_discrete(name="Baits") +
+  scale_y_discrete(name="Preys") +
+  coord_fixed(ratio = 0.8) +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+```
+
+Create input file for the metascape based on the clusters
+
+```{r cluster-metascape, message=FALSE, warning=FALSE}
+# metascape.input <- data.frame("#Cluster" = c("1", "2", "3", "4", "5"),
+#                               "Genes" = c(paste(as.character(data.heatmap$protein[data.heatmap$k == 1]),collapse=", ",sep=""),
+#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 2]),collapse=", ",sep=""),
+#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 3]),collapse=", ",sep=""),
+#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 4]),collapse=", ",sep=""),
+#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 5]),collapse=", ",sep="")))
+# 
+# write.csv(metascape.input, here('outputs', '05_REPRINT-analysis', '05_metascape-input.csv'), row.names = FALSE)
+```
+
+Metascape run on 2023-10-03
+
+Settings: multiple genes analysis, manually reformatted to input (columns = clusters + genes)
+express analysis run

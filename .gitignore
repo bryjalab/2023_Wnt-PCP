@@ -1,0 +1,11 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Ignore the rendered Rmd files to HTML
+*.html
+
+data/
+
+outputs/

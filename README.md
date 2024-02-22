@@ -1,18 +1,30 @@
-## Planar cell polarity (PCP) protein interactomics identifies multiple membrane-associated actomyosin regulators as novel PCP pathway downstream effectors
+# Planar cell polarity (PCP) protein interactomics identifies multiple membrane-associated actomyosin regulators as novel PCP pathway downstream effectors
 
-### Authors
-Kristína Gömöryová^1†^, Nikodém Zezula^1†^, Tomasz W. Radaszkiewicz^1†^, Petra Paclíková^1^, Štěpán Čada^1^, Kateřina Hanáková^2^, Miroslav Micka^1^, David Potěšil^2^, Zbyněk Zdráhal^2^, and Vítězslav Bryja^1,3*^
+## Authors
+Kristína Gömöryová<sup>1†</sup>, Nikodém Zezula<sup>1†</sup>, Tomasz W. Radaszkiewicz<sup>1†^</sup>, Petra Paclíková<sup>1</sup>, Štěpán Čada<sup>1</sup>, Kateřina Hanáková<sup>2</sup>, Miroslav Micka<sup>1</sup>, David Potěšil<sup>2</sup>, Zbyněk Zdráhal<sup>2</sup>, and Vítězslav Bryja<sup>1,3*</sup>
+
+**Affiliations**
+
+<sup>1</sup> Department of Experimental Biology, Faculty of Science, Masaryk University, Brno, Czech Republic.
+
+<sup>2</sup> Central European Institute of Technology (CEITEC), Brno, Czech Republic.
+
+<sup>3</sup> Institute of Biophysics of the Czech Academy of Sciences, Brno, Czech Republic.
+
+<sup>†</sup> Equal contribution
+
+<sup>*</sup> Corresponding author: bryja@sci.muni.cz
+
 
 This repository accompanies the above-mentioned manuscript and provides scripts to reproduce some of the manuscript figures (the ones created in R).
 
-All raw data can be found in the PRIDE repository under identifiers PXD048685 and PXD048678.
+## Reproducing the manuscript figures
 
-### Reproducing the manuscript figures
+**Deposition of raw data to PRIDE**
 
-*Deposition of raw data to PRIDE*
 All raw data were deposited to the ProteomeXchange Consortium via PRIDE and can be accessed by identifier [PXD048685](https://www.ebi.ac.uk/pride/archive/projects/PXD048685) and [PXD048678](https://www.ebi.ac.uk/pride/archive/projects/PXD048678).
 
-*Scripts to reproduce the individual figures*
+**Scripts to reproduce the individual figures**
 
 Scripts are located within the `src` folder:
 

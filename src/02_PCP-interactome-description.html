@@ -1520,7 +1520,10 @@ library(UpSetR)</code></pre>
 <pre class="r"><code>load(here(&#39;outputs&#39;,  &#39;01_DEP-processing&#39;, &#39;01_DEP-df-wide.RData&#39;))
 load(here(&#39;outputs&#39;, &#39;01_DEP-processing&#39;, &#39;01_DEP-results-table.RData&#39;))</code></pre>
 <p>Prepare a folder for the outputs</p>
-<pre class="r"><code>#dir.create(here(&#39;outputs&#39;, &#39;02_PCP-interactome-description&#39;))</code></pre>
+<pre class="r"><code>#dir.create(here(&#39;outputs&#39;, &#39;02_PCP-interactome-description&#39;))
+if (!dir.exists(here(&#39;outputs&#39;, &#39;02_PCP-interactome-description&#39;))){
+  dir.create(here(&#39;outputs&#39;, &#39;02_PCP-interactome-description&#39;))
+}</code></pre>
 </div>
 <div id="perform-a-pca-on-samples" class="section level1">
 <h1>Perform a PCA on samples</h1>

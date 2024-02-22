@@ -1,18 +1,26 @@
-# 2023_Wnt-PCP
+## Planar cell polarity (PCP) protein interactomics identifies multiple membrane-associated actomyosin regulators as novel PCP pathway downstream effectors
 
-Repository related to the Wnt/PCP interactome manuscript.
+### Authors
+Kristína Gömöryová^1†^, Nikodém Zezula^1†^, Tomasz W. Radaszkiewicz^1†^, Petra Paclíková^1^, Štěpán Čada^1^, Kateřina Hanáková^2^, Miroslav Micka^1^, David Potěšil^2^, Zbyněk Zdráhal^2^, and Vítězslav Bryja^1,3*^
 
-The structure of the repository is as follows:
+This repository accompanies the above-mentioned manuscript and provides scripts to reproduce some of the manuscript figures (the ones created in R).
 
-- `data` folder contains all proteomic datasets (in a 'raw' form) used in the study
-- `src` folder contains scripts which can be used to reproduce the analyses
-- `outputs` folder contains the figures and tables generated while analyses
+All raw data can be found in the PRIDE repository under identifiers PXD048685 and PXD048678.
 
-All raw data can be found in the PRIDE repository under identifier xxx.
+### Reproducing the manuscript figures
 
-The figures from manuscript can be reproduced using following scripts:
+*Deposition of raw data to PRIDE*
+All raw data were deposited to the ProteomeXchange Consortium via PRIDE and can be accessed by identifier [PXD048685](https://www.ebi.ac.uk/pride/archive/projects/PXD048685) and [PXD048678](https://www.ebi.ac.uk/pride/archive/projects/PXD048678).
 
-- `01_DEP-processing.Rmd`: analysis of proteinGroups.txt table using the [DEP](https://www.bioconductor.org/packages/release/bioc/html/DEP.html) R package (*Fig. 2A, Suppl. Fig. 1F*)
-- `02_PCP-interactome-description.Rmd`: general description of interactome of individual baits (*Fig. 1C, 1C, 1E, Suppl. Fig. 1H*)
-- `03_REPRINT-data-preparation.Rmd`: formats the input data (MS/MS counts) to format compatible with [REPRINT](https://reprint-apms.org/) tool
-- `03_REPRINT-data-preparation.Rmd`:
+*Scripts to reproduce the individual figures*
+
+Scripts are located within the `src` folder:
+
+- 01_DEP-analysis.Rmd (*Suppl. Fig. 1F*, *Fig. 2A*)
+- 02_PCP-interactome-description.Rmd (*Fig. 1C, Fig. 1D, Fig. 1E*, *Suppl. Fig. 1G*)
+- 03_REPRINT-data-preparation.Rmd 
+- 04-Dotplots.Rmd (*Fig. 2B*, *Suppl. Fig. 2A*, *Suppl. Fig. 2B*)
+- 05_Clusters-humancellmap.Rmd (*Fig. 2C*)
+- 06_miniTurboID.Rmd (*Fig. 4C*, *Fig. 4D*, *Suppl. Fig. 4C*, *Suppl. Fig. 4D*)
+
+All analyses were performed using R version 4.3.1 on the platform x86_64-w64-mingw32/x64 (64-bit).

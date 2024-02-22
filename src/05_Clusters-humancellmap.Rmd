@@ -7,8 +7,21 @@ output:
     theme: flatly
 ---
 
-# Libraries
+# Setup 
 
+Remove all objects from the workspace
+```{r clear-workspace, message=FALSE, warning=FALSE}
+rm(list = ls())
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+if (!dir.exists(here('outputs', '05_Clusters_HCM'))){
+  dir.create(here('outputs', '05_Clusters_HCM'))
+}
+```
+
+Libraries
 ```{r libraries, message=FALSE, warning=FALSE}
 library(here)
 library(DEP)
@@ -23,13 +36,6 @@ library(tidyr)
 load(here('outputs',  '01_DEP-processing', '01_DEP-heatmap-clusters.RData'))
 load(here('outputs', '01_DEP-processing', '01_DEP-results-table.RData'))
 hcm <- read.delim(here('data', 'preys-latest.txt'))
-```
-
-Prepare a folder for the outputs
-```{r outputs-folder, message=FALSE, warning=FALSE}
-if (!dir.exists(here('outputs', '05_Clusters_HCM'))){
-  dir.create(here('outputs', '05_Clusters_HCM'))
-}
 ```
 
 # Preprocess the data

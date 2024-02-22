@@ -7,8 +7,22 @@ output:
     theme: flatly
 ---
 
-# Libraries
+# Setup 
 
+Remove all objects from the workspace
+```{r clear-workspace, message=FALSE, warning=FALSE}
+rm(list = ls())
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+if (!dir.exists(here('outputs', '06_miniTurboID'))){
+  dir.create(here('outputs', '06_miniTurboID'))
+}
+```
+
+
+Libraries required
 ```{r libraries, message=FALSE, warning=FALSE}
 library(here)
 library(DEP)
@@ -22,12 +36,6 @@ library(DEP)
 library(ComplexHeatmap)
 ```
 
-Prepare a folder for the outputs
-```{r outputs-folder, message=FALSE, warning=FALSE}
-if (!dir.exists(here('outputs', '06_miniTurboID'))){
-  dir.create(here('outputs', '06_miniTurboID'))
-}
-```
 
 # Data input
 
@@ -38,7 +46,7 @@ hcm <- read.delim(here('data', 'preys-latest_2023115.txt')) # data downloaded on
 cluster4 <- read.csv(here("data", "03_cluster4-proteins.csv"))
 ```
 
-# Number of upregulated preys per bait
+# Barplot of upregulated preys per bait
 
 ```{r upregulated-baits, message=FALSE, warning=FALSE}
 data <- data %>%
@@ -152,7 +160,7 @@ data.hcm %>%
 #dev.off()
 ```
 
-# Heatmap of baits and upregulated proteins
+# Heatmap
 
 ```{r heatmap, message=FALSE, warning=FALSE}
 proteins <- data.frame(proteins = c("ROR1", "ROR2", "PRICKLE1", "VANGL2", "DVL3",

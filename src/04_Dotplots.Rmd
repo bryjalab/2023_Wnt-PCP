@@ -7,8 +7,21 @@ output:
     theme: flatly
 ---
 
-# Libraries
+# Setup 
 
+Remove all objects from the workspace
+```{r clear-workspace, message=FALSE, warning=FALSE}
+rm(list = ls())
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+if (!dir.exists(here('outputs', '04_Dotplots'))){
+  dir.create(here('outputs', '04_Dotplots'))
+}
+```
+
+Libraries required
 ```{r libraries, message=FALSE, warning=FALSE}
 library(dplyr)
 library(here)
@@ -24,14 +37,6 @@ library(ggtree)
 
 ```{r data-input, message=FALSE, warning=FALSE}
 data <- read.delim(here('data', '16544_matrix.txt'))
-```
-
-Prepare a folder for the outputs
-```{r outputs-folder, message=FALSE, warning=FALSE}
-#dir.create(here('outputs', '03_REPRINT-analysis'))
-if (!dir.exists(here('outputs', '04_Dotplots'))){
-  dir.create(here('outputs', '04_Dotplots'))
-}
 ```
 
 Same filters as were used previously for dotplots applied:
@@ -126,37 +131,6 @@ For each cluster, grep the proteins from the heatmap and order them alphabetical
 data.long <- left_join(data.long, data.heatmap.filt, by = c("GENE" = "protein"))
 data.long$k[is.na(data.long$k)] <- "not.significant"
 
-# for (i in unique(data.long$k)) {
-# p <- data.long %>%
-#   filter(k == 1) %>%
-#   mutate(PreyF = factor(sort(GENE))) %>% 
-#   filter(rel > 0, AVG > 0) %>% 
-#   mutate(SaintProbability = case_when(
-#     SP >= 0.9 ~ "SP >= 0.9",
-#     SP >= 0.7 ~ "SP >= 0.7",
-#     TRUE ~ "ns"
-#   )) %>%
-#   ggplot(aes(protein, PreyF))+
-#   geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +  
-#  # scale_fill_continuous(trans = 'reverse') +
-#   scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
-#   scale_size_continuous(name = 'Relative abundance in %') +
-#   scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
-#   scale_x_discrete(name="Baits") +
-#   scale_y_discrete(name="Preys") +
-#   coord_fixed(ratio = 0.8) +
-#   theme_classic()+
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1))+
-#   labs(title = 1)
-# 
-# svg(paste("dotplot_cluster", i, '.svg'))
-# print(p)
-# dev.off()
-# }
-
-# filter out the non-significant ones and change the order based on the clusters
-# saved manually with height 2600, same width
-
 data.long %>%
 #  filter(k != "not.significant") %>%
   mutate(k = factor(k)) %>%
@@ -183,20 +157,4 @@ data.long %>%
   
 ```
 
-Create input file for the metascape based on the clusters
 
-```{r cluster-metascape, message=FALSE, warning=FALSE}
-# metascape.input <- data.frame("#Cluster" = c("1", "2", "3", "4", "5"),
-#                               "Genes" = c(paste(as.character(data.heatmap$protein[data.heatmap$k == 1]),collapse=", ",sep=""),
-#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 2]),collapse=", ",sep=""),
-#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 3]),collapse=", ",sep=""),
-#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 4]),collapse=", ",sep=""),
-#                                           paste(as.character(data.heatmap$protein[data.heatmap$k == 5]),collapse=", ",sep="")))
-# 
-# write.csv(metascape.input, here('outputs', '05_REPRINT-analysis', '05_metascape-input.csv'), row.names = FALSE)
-```
-
-Metascape run on 2023-10-03
-
-Settings: multiple genes analysis, manually reformatted to input (columns = clusters + genes)
-express analysis run

@@ -1,5 +1,5 @@
 ---
-title: "01: proteinGroups.txt file analysis"
+title: "01: DEP analysis"
 output: 
   html_document:
     toc: true
@@ -7,8 +7,9 @@ output:
     theme: flatly
 ---
 
-# Libraries
+# Setup
 
+R libraries required
 ```{r libraries, message=FALSE, warning=FALSE}
 library(dplyr)
 library(here)
@@ -16,19 +17,19 @@ library(DEP)
 library(DT)
 ```
 
-# Data input
-
-Raw spectra were processed using the MaxQuant software, and the output, **proteinGroups.txt** file is used for further post-processing using the DEP R package.
-
-```{r data-input, message=FALSE, warning=FALSE}
-data <- read.delim(here('data', 'proteinGroups.txt'))
-```
-
 Prepare a folder for the outputs
 ```{r outputs-folder, message=FALSE, warning=FALSE}
 if (!dir.exists(here('outputs', '01_DEP-processing'))){
   dir.create(here('outputs', '01_DEP-processing'))
 }
+```
+
+# Data input
+
+Raw spectra were processed using the MaxQuant software, and the output, **proteinGroups.txt** file is used for further post-processing using the [DEP R package](https://bioconductor.org/packages/release/bioc/html/DEP.html).
+
+```{r data-input, message=FALSE, warning=FALSE}
+data <- read.delim(here('data', 'proteinGroups.txt'))
 ```
 
 
@@ -135,12 +136,6 @@ The data is background corrected and normalized by **variance stabilizing transf
 data_norm_vsn <- normalize_vsn(data_filt)
 ```
 
-## SD vs mean plots
-Plot standard deviations vs mean plots
-```{r sd-check, message=FALSE, warning=FALSE}
-meanSdPlot(data_norm_vsn)
-```
-
 ## Boxplots
 Visualize normalization by boxplots for all samples before and after normalization
 ```{r normalization-check, message=FALSE, warning=FALSE}
@@ -163,7 +158,6 @@ Imputation of missing values:
 
 Missing values of **MNAR** type, so **man** imputation used: impute missing data using random draws from a manually defined left-shifted Gaussian distribution
 ```{r imputation, message=FALSE, warning=FALSE}
-# rather setting the seed; 42 is just purely the Hitchhiker's Guide to Galaxy reference :)
 set.seed(42)
 data_man <- impute(data_norm_vsn, fun = "man", shift = 1.8, scale = 0.3)
 ```

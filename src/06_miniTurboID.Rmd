@@ -1,0 +1,201 @@
+---
+title: "06: EPHA2, PHACTR5, RAI14 miniTurboID"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+# Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+library(here)
+library(DEP)
+library(dplyr)
+library(ggplot2)
+library(tibble)
+library(tidyr)
+library(UpSetR)
+library(factoextra)
+library(DEP)
+library(ComplexHeatmap)
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+if (!dir.exists(here('outputs', '06_miniTurboID'))){
+  dir.create(here('outputs', '06_miniTurboID'))
+}
+```
+
+# Data input
+
+```{r data-input, message=FALSE, warning=FALSE}
+data <- read.delim(here('data', '20231115_report_imputed.txt'))
+data <-  make_unique(data, "Gene.Names..primary.", "Protein.ID...1.", delim = ";")
+hcm <- read.delim(here('data', 'preys-latest_2023115.txt')) # data downloaded on 2023-11-15
+cluster4 <- read.csv(here("data", "03_cluster4-proteins.csv"))
+```
+
+# Number of upregulated preys per bait
+
+```{r upregulated-baits, message=FALSE, warning=FALSE}
+data <- data %>%
+  mutate(up_RAI14 = ifelse(LIMMA_DIA_RAI14.CTR.adj.P.Val< 0.05 & LIMMA_DIA_RAI14.CTR.logFC > 1, 1, 0)) %>%
+  mutate(up_EPHA2 = ifelse(LIMMA_DIA_EPHA2.CTR.adj.P.Val < 0.05 & LIMMA_DIA_EPHA2.CTR.logFC > 1, 1, 0)) %>%
+  mutate(up_PHACTR4 = ifelse(LIMMA_DIA_PHACTR4.CTR.adj.P.Val < 0.05 & LIMMA_DIA_PHACTR4.CTR.logFC > 1, 1, 0))
+
+#svg(here('outputs', 'number-of-upregulated-proteins-per-bait.svg'))
+data %>%
+  select(Gene.Names..primary., starts_with("up")) %>%
+  pivot_longer(cols = up_RAI14:up_PHACTR4, names_to = "bait", values_to = "upregulated") %>%
+  mutate(bait = gsub("up_", "", bait)) %>%
+  group_by(bait) %>%
+  summarise(n_upregulated = sum(upregulated)) %>%
+  ggplot(aes(x = reorder(bait, -n_upregulated), y = n_upregulated, fill = bait)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  theme_minimal(base_size = 17)+
+  labs(x = "Bait", y = "Number of upregulated preys") +
+  scale_fill_manual(values = c(  "#00A087FF", "#3C5488FF",  "#E64B35FF"))
+#dev.off()
+```
+
+
+# PCA
+```{r pca, message=FALSE, warning=FALSE}
+tmp <- data %>%
+  select(Gene.Names..primary., ends_with("imp")) %>%
+  rowwise() %>%
+  mutate(most_variable = sd(c_across(ends_with("imp")))) %>%
+  arrange(desc(most_variable)) %>%
+  ungroup() %>%
+  slice_head(n = 500) %>%
+  select(-most_variable) %>%
+  column_to_rownames(var = "Gene.Names..primary.") %>%
+  t() %>%
+  as.data.frame() %>%
+  mutate(condition = c("CTRL", "CTRL", "CTRL", "CTRL", "CTRL",
+                       "RAI14", "RAI14", "RAI14", "RAI14", "RAI14",
+                       "EPHA2", "EPHA2", "EPHA2", "EPHA2", "EPHA2",
+                       "PHACTR4", "PHACTR4", "PHACTR4", "PHACTR4", "PHACTR4"))
+
+rownames(tmp) <- gsub("PG.MaxLFQ.", "", rownames(tmp))
+rownames(tmp) <- gsub("_log2_norm_imp", "", rownames(tmp))
+
+#svg(here('outputs', 'PCA.svg'))
+prcomp(tmp[, -501], center = TRUE, scale = FALSE) %>%
+  fviz_pca_ind(habillage = tmp$condition, palette = c( "#F39B7FFF", "#00A087FF", "#3C5488FF", "#E64B35FF"))
+# dev.off()
+```
+
+# UpSet plot
+```{r upset-plot, message=FALSE, warning=FALSE}
+#svg(here('outputs', 'upsetPlot-upregulated-preys.svg'))
+ data %>%
+   select(starts_with("up_")) %>%
+   rename_with(~ sub("up_", "", .x), everything()) %>%
+   upset(., order.by = "freq")
+#dev.off()
+```
+
+# Human Cell Map
+
+Map onto the Human Cell Map
+
+```{r human-cell-map, message=FALSE, warning=FALSE}
+data.hcm <- data %>%
+  left_join(., hcm %>% select(symbol, MMF.localization), by = c("Gene.Names..primary." = "symbol"))
+
+data.hcm[is.na(data.hcm)] <- "-" #If protein was not mapped, use "-" instead
+
+data.hcm <-  data.hcm %>%
+  mutate(NMF.loc = strsplit(as.character(MMF.localization), ", ")) %>%
+  unnest(NMF.loc)
+
+# Create long table
+data.hcm <- data.hcm %>%
+  select(Gene.Names..primary., starts_with("up_"), NMF.loc) %>%
+  rename_with(~ sub("up_", "", .x), everything()) %>%
+  pivot_longer(cols = RAI14:PHACTR4,
+               names_to = "bait",
+               values_to = "significant")
+```
+
+Plot the human cell map
+
+```{r human-cell-map-viz, message=FALSE, warning=FALSE}
+#svg(here('outputs', '02_PCP-interactome-description', '02_facetBarplot-humancellmap_multicolor.svg'))
+data.hcm %>%
+  filter(NMF.loc != "-" ) %>%
+  group_by(bait, NMF.loc) %>%
+  summarise(n_preys = sum(significant)) %>%
+  filter(n_preys != 0) %>%
+  mutate(top_loc = case_when(
+    n_preys == max(n_preys) ~ "max",
+    TRUE ~ "")
+  ) %>%
+  mutate(top_localization = case_when(
+    top_loc == "max" & bait == "RAI14" ~ "RAI14",
+    top_loc == "max" & bait == "EPHA2" ~ "EPHA2",
+    top_loc == "max" & bait == "PHACTR4" ~ "PHACTR4",
+    TRUE ~ ""
+  )) %>%
+  ggplot(aes(x = NMF.loc, y = n_preys, fill = top_localization)) +
+  geom_bar(stat = "identity")+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  labs(x = "Prey localization in Human Cell Map",
+       y = "Number of preys") +
+  facet_grid(bait ~ .) +
+  scale_fill_manual(values = c("#b8B8B8",  "#00A087FF", "#3C5488FF", "#F39B7FFF"))
+#dev.off()
+```
+
+# Heatmap of baits and upregulated proteins
+
+```{r heatmap, message=FALSE, warning=FALSE}
+proteins <- data.frame(proteins = c("ROR1", "ROR2", "PRICKLE1", "VANGL2", "DVL3",
+                                    cluster4$cluster4,
+                                    "CELSR1", "CELSR2", "TIAM1", "DAAM1", "SMURF2", "VANGL1", "VANGL2",
+                                    "PRICKLE1", "PRICKLE2", "CCDC88C"))
+proteins$category <- c(rep("WntPCPBait", 5), rep("cluster4", 33), rep("nonCanonicalWnt", 10))
+
+# update the gene names
+proteins$proteins[proteins$proteins == "ERBB2IP"] <- "ERBB2"
+proteins$proteins[proteins$proteins == "MLLT4"] <- "AFDN"
+proteins$proteins[proteins$proteins == "SEPT9"] <- "SEPTIN9"
+
+
+selected.baits <- left_join(proteins %>% select(proteins), data %>% select(name, up_RAI14, up_EPHA2, up_PHACTR4),
+                            by = c("proteins" = "name"))
+
+#category <- factor(proteins$category, levels= c( "WntPCPBait",  "nonCanonicalWnt", "cluster4"))
+category <- factor(proteins$category, levels= c( "cluster4",  "nonCanonicalWnt", "WntPCPBait"))
+
+mat <- as.matrix(selected.baits[, 2:ncol(selected.baits)])
+rownames(mat) <- selected.baits$proteins
+
+row_ha <- rowAnnotation(category = category)
+col_ha <- HeatmapAnnotation(bait = c("RAI14", "EPHA2", "PHACTR4"),
+                            col = list(method = c("RAI14" = "#1ECBE1", "EPHA2" = "#E11ECB", "PHACTR4" = "#000000")))
+
+svg(here('outputs', 'heatmap_comparison-binary_reordered.svg'))
+Heatmap(mat,
+        col = c("white", "black"),
+        row_names_gp = grid::gpar(fontsize = 6),
+        column_names_gp = grid::gpar(fontsize = 9),
+        name = "Protein present",
+        right_annotation = row_ha,
+        top_annotation = col_ha,
+        cluster_rows = FALSE,
+        cluster_columns = FALSE,
+        show_row_names = TRUE,
+        row_split = proteins$category,
+      cluster_row_slices = FALSE
+)
+
+dev.off()
+```
+
+

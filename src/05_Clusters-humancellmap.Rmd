@@ -21,7 +21,7 @@ if (!dir.exists(here('outputs', '05_Clusters_HCM'))){
 }
 ```
 
-Libraries
+Libraries required
 ```{r libraries, message=FALSE, warning=FALSE}
 library(here)
 library(DEP)
@@ -63,9 +63,10 @@ clusters <- clusters %>%
 ```
 
 # Plot Human Cell Map for the clusters
+
 ```{r plot-HCM, message=FALSE, warning=FALSE}
 # Significantly changed interactors of baits
-#svg(here('outputs', '02_PCP-interactome-description', '02_barplotsFacet_clusters_reordered_upd.svg'))
+#svg(here('outputs', '05_Clusters_HCM', '05_clusters-HCM.svg'))
 clusters %>%
   na.omit() %>%
   group_by(k, MMF.localization) %>%

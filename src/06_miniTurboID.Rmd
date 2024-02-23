@@ -21,7 +21,6 @@ if (!dir.exists(here('outputs', '06_miniTurboID'))){
 }
 ```
 
-
 Libraries required
 ```{r libraries, message=FALSE, warning=FALSE}
 library(here)
@@ -54,7 +53,7 @@ data <- data %>%
   mutate(up_EPHA2 = ifelse(LIMMA_DIA_EPHA2.CTR.adj.P.Val < 0.05 & LIMMA_DIA_EPHA2.CTR.logFC > 1, 1, 0)) %>%
   mutate(up_PHACTR4 = ifelse(LIMMA_DIA_PHACTR4.CTR.adj.P.Val < 0.05 & LIMMA_DIA_PHACTR4.CTR.logFC > 1, 1, 0))
 
-#svg(here('outputs', 'number-of-upregulated-proteins-per-bait.svg'))
+#svg(here('outputs', '06_miniTurboID', '06_number-of-upregulated-proteins-per-bait.svg'))
 data %>%
   select(Gene.Names..primary., starts_with("up")) %>%
   pivot_longer(cols = up_RAI14:up_PHACTR4, names_to = "bait", values_to = "upregulated") %>%
@@ -91,7 +90,7 @@ tmp <- data %>%
 rownames(tmp) <- gsub("PG.MaxLFQ.", "", rownames(tmp))
 rownames(tmp) <- gsub("_log2_norm_imp", "", rownames(tmp))
 
-#svg(here('outputs', 'PCA.svg'))
+#svg(here('outputs', '06_miniTurboID', '06_PCA.svg'))
 prcomp(tmp[, -501], center = TRUE, scale = FALSE) %>%
   fviz_pca_ind(habillage = tmp$condition, palette = c( "#F39B7FFF", "#00A087FF", "#3C5488FF", "#E64B35FF"))
 # dev.off()
@@ -99,7 +98,7 @@ prcomp(tmp[, -501], center = TRUE, scale = FALSE) %>%
 
 # UpSet plot
 ```{r upset-plot, message=FALSE, warning=FALSE}
-#svg(here('outputs', 'upsetPlot-upregulated-preys.svg'))
+#svg(here('outputs', '06_miniTurboID', '06_upsetPlot-upregulated-preys.svg'))
  data %>%
    select(starts_with("up_")) %>%
    rename_with(~ sub("up_", "", .x), everything()) %>%
@@ -133,7 +132,7 @@ data.hcm <- data.hcm %>%
 Plot the human cell map
 
 ```{r human-cell-map-viz, message=FALSE, warning=FALSE}
-#svg(here('outputs', '02_PCP-interactome-description', '02_facetBarplot-humancellmap_multicolor.svg'))
+#svg(here('outputs', ''06_miniTurboID'', ''06_humancellmap.svg'))
 data.hcm %>%
   filter(NMF.loc != "-" ) %>%
   group_by(bait, NMF.loc) %>%
@@ -188,7 +187,7 @@ row_ha <- rowAnnotation(category = category)
 col_ha <- HeatmapAnnotation(bait = c("RAI14", "EPHA2", "PHACTR4"),
                             col = list(method = c("RAI14" = "#1ECBE1", "EPHA2" = "#E11ECB", "PHACTR4" = "#000000")))
 
-svg(here('outputs', 'heatmap_comparison-binary_reordered.svg'))
+#svg(here('outputs','06_miniTurboID', '06_heatmap_comparison-binary_reordered.svg'))
 Heatmap(mat,
         col = c("white", "black"),
         row_names_gp = grid::gpar(fontsize = 6),
@@ -203,7 +202,7 @@ Heatmap(mat,
       cluster_row_slices = FALSE
 )
 
-dev.off()
+#dev.off()
 ```
 
 

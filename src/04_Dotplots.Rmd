@@ -74,7 +74,13 @@ data.long <- pivot_longer(data.filtered, -GENE, names_to = c("protein", ".value"
 
 # Dotplots
 
-Comment: in the Rmd file they look weird, it is preferred to plot them in R script and save manually from the Viewer
+*Comment: in the Rmd file they look weird, it is preferred to plot them separately in R script and save manually from the Viewer with adjusted size settings*
+
+Dotplots visualizing the results from REPRINT analysis of BioID data.
+
+The same settings for visualization are used as when done by the ProHits software.
+
+Primary threshold is SP >= 0.9, secondary threshold is SP >= 0.7.
 
 ```{r dotplots, message=FALSE, warning=FALSE}
 
@@ -114,7 +120,9 @@ data.long %>%
 
 ```
 
-# Cluster-wise dotplots
+# Dotplots for heatmap clusters
+
+Dotplots for individual **clusters in the heatmap (#C1-#C5)**.
 
 ```{r cluster-heatmap, message=FALSE, warning=FALSE}
 
@@ -158,3 +166,31 @@ data.long %>%
 ```
 
 
+Dotplots for the **non-significant proteins**
+
+```{r cluster-dotplots-nonsignificant, message=FALSE, warning=FALSE}
+data.long %>%
+  filter(k == "not.significant") %>%
+  mutate(k = factor(k)) %>%
+  arrange(k) %>%
+  group_by(k) %>%
+  mutate(PreyF = factor(sort(GENE))) %>% 
+  filter(rel > 0, AVG > 0) %>%
+  mutate(SaintProbability = case_when(
+    SP >= 0.9 ~ "SP >= 0.9",
+    SP >= 0.7 ~ "SP >= 0.7",
+    TRUE ~ "ns"
+  )) %>%
+  ggplot(aes(protein, PreyF))+
+  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +
+  # scale_fill_continuous(trans = 'reverse') +
+  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
+  scale_size_continuous(name = 'Relative abundance in %') +
+  scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
+  scale_x_discrete(name="Baits") +
+  scale_y_discrete(name="Preys") +
+  coord_fixed(ratio = 0.8) +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+```

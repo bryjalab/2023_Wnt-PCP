@@ -14,18 +14,18 @@ Remove all objects from the workspace
 rm(list = ls())
 ```
 
-Prepare a folder for the outputs
-```{r outputs-folder, message=FALSE, warning=FALSE}
-if (!dir.exists(here('outputs', '03_REPRINT-analysis'))){
-  dir.create(here('outputs', '03_REPRINT-analysis'))
-}
-```
-
 Libraries required
 ```{r libraries, message=FALSE, warning=FALSE}
 library(dplyr)
 library(here)
 library(DEP)
+```
+
+Prepare a folder for the outputs
+```{r outputs-folder, message=FALSE, warning=FALSE}
+if (!dir.exists(here('outputs', '03_REPRINT-analysis'))){
+  dir.create(here('outputs', '03_REPRINT-analysis'))
+}
 ```
 
 # Data input

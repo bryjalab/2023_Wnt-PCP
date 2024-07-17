@@ -55,9 +55,9 @@ tmp <- df_wide %>%
   as.data.frame() %>%
   mutate(condition = c("CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1",
                        "VANGL2", "VANGL2", "DVL3", "DVL3",
-                       "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                       "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1",
                        "VANGL2", "VANGL2", "DVL3", "DVL3",
-                       "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                       "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1",
                        "VANGL2", "VANGL2", "DVL3", "DVL3"))
 
 #svg(here("outputs", "02_PCP-interactome-description", "02_PCA-conditions.svg"))
@@ -122,8 +122,8 @@ data.hcm <- data_results %>%
 data.hcm[is.na(data.hcm)] <- "-" #If protein was not mapped, use "-" instead
 
 # Split the MMF.localization by "," in case there are multiple localizations mapped to the same protein
-data.hcm <-  data.hcm %>%   
-  mutate(NMF.loc = strsplit(as.character(MMF.localization), ", ")) %>% 
+data.hcm <-  data.hcm %>%
+  mutate(NMF.loc = strsplit(as.character(MMF.localization), ", ")) %>%
   unnest(NMF.loc)
 
 # Create long table
@@ -140,8 +140,8 @@ data.hcm %>%
   summarise(n_preys = sum(significant)) %>%
   filter(n_preys != 0) %>%
   mutate(top_loc = case_when(
-                            n_preys == max(n_preys) ~ "max",
-                            TRUE ~ "")
+                             n_preys == max(n_preys) ~ "max",
+                             TRUE ~ "")
   ) %>%
   mutate(top_localization = case_when(
     top_loc == "max" & bait == "DVL3" ~ "DVL3",
@@ -158,7 +158,7 @@ data.hcm %>%
   labs(x = "Prey localization in Human Cell Map",
        y = "Number of preys") +
   facet_grid(bait ~ .) +
-  scale_fill_manual(values = c("#b8B8B8", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF", "#E64B35FF" ))
+  scale_fill_manual(values = c("#b8B8B8", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF", "#E64B35FF"))
 #dev.off()
 ```
 

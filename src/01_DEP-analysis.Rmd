@@ -70,7 +70,7 @@ BirA.sticky <- BirA %>%
   filter(AVE_SC > 20)
 
 data.filtered <- data_unique %>%
-  left_join(., BirA.sticky %>% 
+  left_join(., BirA.sticky %>%
               select(GENE, AVE_SC, NUM_EXPT), by = c("name" = "GENE")) %>%
   filter(is.na(AVE_SC))
 ```
@@ -95,7 +95,7 @@ exp_design <- data.frame(
                 "VANGL2", "VANGL2", "DVL3", "DVL3"),
   replicate = c((rep(1:2, 6)), rep(3:4, 6), rep(5:6, 6))
 )
- 
+
 exp_design$label <- as.character(exp_design$label)
 exp_design$condition <- as.character(exp_design$condition)
 exp_design$replicate <- as.numeric(exp_design$replicate)
@@ -174,10 +174,10 @@ Adjustment of p-values done using **fdrtools** (by default)
 # Perform LIMMA test
 data_diff_man <- test_diff(data_man, type = "manual",
                            test = c("DVL3_vs_CTRL",
-                                "ROR1_vs_CTRL",
-                                "ROR2_vs_CTRL",
-                                "VANGL2_vs_CTRL",
-                                "PRICKLE1_vs_CTRL"))
+                                    "ROR1_vs_CTRL",
+                                    "ROR2_vs_CTRL",
+                                    "VANGL2_vs_CTRL",
+                                    "PRICKLE1_vs_CTRL"))
 
 # Denote the significant proteins
 dep_man <- add_rejections(data_diff_man, alpha = 0.05, lfc = log2(2))

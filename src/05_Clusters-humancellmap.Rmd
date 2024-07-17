@@ -50,12 +50,12 @@ data_results <- data_results %>%
   mutate(up_VANGL2 = ifelse(VANGL2_vs_CTRL_p.adj < 0.05 & VANGL2_vs_CTRL_ratio > 1, 1, 0))
 
 clusters <- data.heatmap %>%
-  left_join(., hcm %>% 
-              select(symbol, MMF.localization), 
-              by = c("protein" = "symbol")) %>%
-  left_join(., data_results %>% 
-              select(name, starts_with("up_")), 
-              by = c("protein" = "name"))
+  left_join(., hcm %>%
+              select(symbol, MMF.localization),
+            by = c("protein" = "symbol")) %>%
+  left_join(., data_results %>%
+              select(name, starts_with("up_")),
+            by = c("protein" = "name"))
 
 # Create long table
 clusters <- clusters %>%
@@ -77,8 +77,8 @@ clusters %>%
   summarise(n_preys = sum(significant)) %>%
   filter(n_preys != 0) %>%
   mutate(top_loc = case_when(
-                            n_preys == max(n_preys) ~ "max",
-                            TRUE ~ "")
+                             n_preys == max(n_preys) ~ "max",
+                             TRUE ~ "")
   ) %>%
   #mutate(cluster = factor(k, levels = c(2,3,4,1,5))) %>%
   mutate(cluster = factor(k, levels = c(1, 2, 3, 4, 5), labels = c("#C1", "#C2", "#C3", "#C4", "#C5"))) %>%
@@ -89,8 +89,8 @@ clusters %>%
   theme(legend.position = "none") +
   labs(x = "Prey localization in Human Cell Map",
        y = "Number of preys") +
-  facet_grid(cluster~ .) +
-  scale_fill_manual(values = c("#b8B8B8", "#E64B35FF" ))
+  facet_grid(cluster ~ .) +
+  scale_fill_manual(values = c("#b8B8B8", "#E64B35FF"))
 #dev.off()
 ```
 

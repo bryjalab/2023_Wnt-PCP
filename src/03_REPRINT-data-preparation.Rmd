@@ -77,7 +77,7 @@ data <- data %>%
          "ROR1_06_NUMSPECSTOT" = "MS.MS.count.3R.04",
          "ROR2_05_NUMSPECSTOT" = "MS.MS.count.3R.05",
          "ROR2_06_NUMSPECSTOT" = "MS.MS.count.3R.06",
-         "PRICKLE1_05_NUMSPECSTOT" =	"MS.MS.count.3R.07", 
+         "PRICKLE1_05_NUMSPECSTOT" =	"MS.MS.count.3R.07",
          "PRICKLE1_06_NUMSPECSTOT" =	"MS.MS.count.3R.08",
          "VANGL2_05_NUMSPECSTOT" = "MS.MS.count.3R.09",
          "VANGL2_06_NUMSPECSTOT" = "MS.MS.count.3R.10",
@@ -95,7 +95,7 @@ vec <- gsub("(\\_\\d+\\_[A-Z]+)", "", vec)
 vec <- gsub("CTRL", "C", vec)
 
 # join the row with dataframe
-joined <- rbind (vec, data)
+joined <- rbind(vec, data)
 
 # write txt file
 write.table(joined, here("outputs", "03_REPRINT-analysis", "03_REPRINT-data-input.txt"), sep = "\t", row.names = FALSE, quote = FALSE)

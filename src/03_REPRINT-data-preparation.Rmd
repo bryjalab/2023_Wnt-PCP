@@ -23,15 +23,15 @@ library(DEP)
 
 Prepare a folder for the outputs
 ```{r outputs-folder, message=FALSE, warning=FALSE}
-if (!dir.exists(here('outputs', '03_REPRINT-analysis'))){
-  dir.create(here('outputs', '03_REPRINT-analysis'))
+if (!dir.exists(here("outputs", "03_REPRINT-analysis"))) {
+  dir.create(here("outputs", "03_REPRINT-analysis"))
 }
 ```
 
 # Data input
 
 ```{r data-input, message=FALSE, warning=FALSE}
-load(here('outputs', '01_DEP-processing', '01_DEP-df-wide.RData'))
+load(here("outputs", "01_DEP-processing", "01_DEP-df-wide.RData"))
 ```
 
 # Filter relevant columns
@@ -44,45 +44,45 @@ data <- df_wide %>%
 
 # Renaming columns
 data <- data %>%
-  rename('PROTID' = 'ID',
-         'GENEID' = 'name',
-         'PROTEIN' = 'Sequence.length',
-         'CTRL_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.01' ,
-         'CTRL_02_NUMSPECSTOT' =	'MS.MS.count.1R.EE.02' ,
-         'ROR1_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.03' ,
-         'ROR1_02_NUMSPECSTOT' =	'MS.MS.count.1R.EE.04' ,
-         'ROR2_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.05' ,
-         'ROR2_02_NUMSPECSTOT' = 'MS.MS.count.1R.EE.06' ,
-         'PRICKLE1_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.07' ,
-         'PRICKLE1_02_NUMSPECSTOT' = 'MS.MS.count.1R.EE.08' ,
-         'VANGL2_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.09' ,
-         'VANGL2_02_NUMSPECSTOT' = 'MS.MS.count.1R.EE.10' ,
-         'DVL3_01_NUMSPECSTOT' = 'MS.MS.count.1R.EE.11' ,
-         'DVL3_02_NUMSPECSTOT' =	'MS.MS.count.1R.EE.12' ,
-         'CTRL_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.01' ,
-         'CTRL_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.02' ,
-         'ROR1_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.03' ,
-         'ROR1_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.04' ,
-         'ROR2_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.05' ,
-         'ROR2_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.06' ,
-         'PRICKLE1_03_NUMSPECSTOT' =	'MS.MS.count.2R.EE.07', 
-         'PRICKLE1_04_NUMSPECSTOT' =	'MS.MS.count.2R.EE.08' ,
-         'VANGL2_03_NUMSPECSTOT' = 'MS.MS.count.2R.EE.09' ,
-         'VANGL2_04_NUMSPECSTOT' = 'MS.MS.count.2R.EE.10' ,
-         'DVL3_03_NUMSPECSTOT' = 'MS.MS.count.2R.EE.11' ,
-         'DVL3_04_NUMSPECSTOT' = 'MS.MS.count.2R.EE.12' ,
-         'CTRL_05_NUMSPECSTOT' = 'MS.MS.count.3R.01' ,
-         'CTRL_06_NUMSPECSTOT' = 'MS.MS.count.3R.02' ,
-         'ROR1_05_NUMSPECSTOT' = 'MS.MS.count.3R.03' ,
-         'ROR1_06_NUMSPECSTOT' = 'MS.MS.count.3R.04' ,
-         'ROR2_05_NUMSPECSTOT' = 'MS.MS.count.3R.05' ,
-         'ROR2_06_NUMSPECSTOT' = 'MS.MS.count.3R.06' ,
-         'PRICKLE1_05_NUMSPECSTOT' =	'MS.MS.count.3R.07', 
-         'PRICKLE1_06_NUMSPECSTOT' =	'MS.MS.count.3R.08' ,
-         'VANGL2_05_NUMSPECSTOT' = 'MS.MS.count.3R.09' ,
-         'VANGL2_06_NUMSPECSTOT' = 'MS.MS.count.3R.10' ,
-         'DVL3_05_NUMSPECSTOT' = 'MS.MS.count.3R.11' ,
-         'DVL3_06_NUMSPECSTOT' ='MS.MS.count.3R.12' ) 
+  rename("PROTID" = "ID",
+         "GENEID" = "name",
+         "PROTEIN" = "Sequence.length",
+         "CTRL_01_NUMSPECSTOT" = "MS.MS.count.1R.EE.01",
+         "CTRL_02_NUMSPECSTOT" =	"MS.MS.count.1R.EE.02",
+         "ROR1_01_NUMSPECSTOT" = "MS.MS.count.1R.EE.03",
+         "ROR1_02_NUMSPECSTOT" =	"MS.MS.count.1R.EE.04",
+         "ROR2_01_NUMSPECSTOT" = "MS.MS.count.1R.EE.05",
+         "ROR2_02_NUMSPECSTOT" = "MS.MS.count.1R.EE.06",
+         "PRICKLE1_01_NUMSPECSTOT" = "MS.MS.count.1R.EE.07",
+         "PRICKLE1_02_NUMSPECSTOT" = "MS.MS.count.1R.EE.08",
+         "VANGL2_01_NUMSPECSTOT" = "MS.MS.count.1R.EE.09",
+         "VANGL2_02_NUMSPECSTOT" = "MS.MS.count.1R.EE.10",
+         "DVL3_01_NUMSPECSTOT" = "MS.MS.count.1R.EE.11",
+         "DVL3_02_NUMSPECSTOT" =	"MS.MS.count.1R.EE.12",
+         "CTRL_03_NUMSPECSTOT" =	"MS.MS.count.2R.EE.01",
+         "CTRL_04_NUMSPECSTOT" =	"MS.MS.count.2R.EE.02",
+         "ROR1_03_NUMSPECSTOT" =	"MS.MS.count.2R.EE.03",
+         "ROR1_04_NUMSPECSTOT" =	"MS.MS.count.2R.EE.04",
+         "ROR2_03_NUMSPECSTOT" =	"MS.MS.count.2R.EE.05",
+         "ROR2_04_NUMSPECSTOT" =	"MS.MS.count.2R.EE.06",
+         "PRICKLE1_03_NUMSPECSTOT" =	"MS.MS.count.2R.EE.07",
+         "PRICKLE1_04_NUMSPECSTOT" =	"MS.MS.count.2R.EE.08",
+         "VANGL2_03_NUMSPECSTOT" = "MS.MS.count.2R.EE.09",
+         "VANGL2_04_NUMSPECSTOT" = "MS.MS.count.2R.EE.10",
+         "DVL3_03_NUMSPECSTOT" = "MS.MS.count.2R.EE.11",
+         "DVL3_04_NUMSPECSTOT" = "MS.MS.count.2R.EE.12",
+         "CTRL_05_NUMSPECSTOT" = "MS.MS.count.3R.01",
+         "CTRL_06_NUMSPECSTOT" = "MS.MS.count.3R.02",
+         "ROR1_05_NUMSPECSTOT" = "MS.MS.count.3R.03",
+         "ROR1_06_NUMSPECSTOT" = "MS.MS.count.3R.04",
+         "ROR2_05_NUMSPECSTOT" = "MS.MS.count.3R.05",
+         "ROR2_06_NUMSPECSTOT" = "MS.MS.count.3R.06",
+         "PRICKLE1_05_NUMSPECSTOT" =	"MS.MS.count.3R.07", 
+         "PRICKLE1_06_NUMSPECSTOT" =	"MS.MS.count.3R.08",
+         "VANGL2_05_NUMSPECSTOT" = "MS.MS.count.3R.09",
+         "VANGL2_06_NUMSPECSTOT" = "MS.MS.count.3R.10",
+         "DVL3_05_NUMSPECSTOT" = "MS.MS.count.3R.11",
+         "DVL3_06_NUMSPECSTOT" = "MS.MS.count.3R.12")
 ```
 
 # Prepare REPRINT output
@@ -98,8 +98,7 @@ vec <- gsub("CTRL", "C", vec)
 joined <- rbind (vec, data)
 
 # write txt file
-write.table(joined, here('outputs', '03_REPRINT-analysis', '03_REPRINT-data-input.txt'), sep = '\t', row.names = FALSE, quote = FALSE)
-
+write.table(joined, here("outputs", "03_REPRINT-analysis", "03_REPRINT-data-input.txt"), sep = "\t", row.names = FALSE, quote = FALSE)
 ```
 
 # REPRINT settings description

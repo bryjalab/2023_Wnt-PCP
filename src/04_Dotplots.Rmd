@@ -28,15 +28,15 @@ library(ggtree)
 
 Prepare a folder for the outputs
 ```{r outputs-folder, message=FALSE, warning=FALSE}
-if (!dir.exists(here('outputs', '04_Dotplots'))){
-  dir.create(here('outputs', '04_Dotplots'))
+if (!dir.exists(here("outputs", "04_Dotplots"))) {
+  dir.create(here("outputs", "04_Dotplots"))
 }
 ```
 
 # Data input
 
 ```{r data-input, message=FALSE, warning=FALSE}
-data <- read.delim(here('data', '16544_matrix.txt'))
+data <- read.delim(here("data", "16544_matrix.txt"))
 ```
 
 Same filters as were used previously for dotplots applied:
@@ -57,16 +57,16 @@ Create the same metrics as used in the Prohits visualization tool.
 markers <- data.filtered$GENE %>% unique()
 
 data.filtered <- data.filtered %>%
-    select(GENE, contains("SP"), contains("_AVG_"))
-  
+  select(GENE, contains("SP"), contains("_AVG_"))
+
 # compute relative abundance
 data.filtered <- data.filtered %>%
   rowwise() %>%
-  mutate(DVL3_rel = DVL3_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
-  mutate(ROR1_rel = ROR1_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
-  mutate(ROR2_rel = ROR2_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
-  mutate(PRICKLE1_rel = PRICKLE1_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
-  mutate(VANGL2_rel = VANGL2_AVG_SPC/  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) 
+  mutate(DVL3_rel = DVL3_AVG_SPC /  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(ROR1_rel = ROR1_AVG_SPC /  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(ROR2_rel = ROR2_AVG_SPC /  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(PRICKLE1_rel = PRICKLE1_AVG_SPC /  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100) %>%
+  mutate(VANGL2_rel = VANGL2_AVG_SPC /  sum(across(DVL3_AVG_SPC:VANGL2_AVG_SPC)) * 100)
 
 # create long table
 data.long <- pivot_longer(data.filtered, -GENE, names_to = c("protein", ".value"), names_sep = "_")
@@ -88,7 +88,7 @@ mat <- data.filtered %>%
   select(contains("_AVG_"))
 
 row.names(mat) <- data.filtered$GENE
-clust <- hclust(dist(mat %>% as.matrix(), method = 'canberra'), method = 'ward.D') # hclust with distance matrix
+clust <- hclust(dist(mat %>% as.matrix(), method = "canberra"), method = "ward.D") # hclust with distance matrix
 # for clustering used default option for ProHITS Dotplot
 
 # ddgram <- as.dendrogram(clust) # create dendrogram
@@ -96,57 +96,56 @@ clust <- hclust(dist(mat %>% as.matrix(), method = 'canberra'), method = 'ward.D
 
 # plot the dotplot
 
-#svg(here('outputs', '04_Dotplots', '04_dotplot_BioID.svg'))
+#svg(here("outputs", "04_Dotplots", "04_dotplot_BioID.svg"))
 data.long %>%
-  mutate(PreyF = factor(GENE, levels = clust$labels[clust$order])) %>% 
+  mutate(PreyF = factor(GENE, levels = clust$labels[clust$order])) %>%
   filter(rel > 0, AVG > 0) %>% 
   mutate(SaintProbability = case_when(
     SP >= 0.9 ~ "SP >= 0.9",
     SP >= 0.7 ~ "SP >= 0.7",
     TRUE ~ "ns"
   )) %>%
-  ggplot(aes(protein, PreyF))+
-  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +  
- # scale_fill_continuous(trans = 'reverse') +
-  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
-  scale_size_continuous(name = 'Relative abundance in %') +
-  scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
-  scale_x_discrete(name="Baits") +
-  scale_y_discrete(name="Preys") +
+  ggplot(aes(protein, PreyF)) +
+  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP), shape = 21) +
+  #scale_fill_continuous(trans = "reverse") +
+  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0, 50), oob = scales::squish, name = "Avg abundance") +
+  scale_size_continuous(name = "Relative abundance in %") +
+  scale_color_manual(values = c("#bbdffb", "#56B1F7", "#132B43")) +
+  scale_x_discrete(name = "Baits") +
+  scale_y_discrete(name = "Preys") +
   coord_fixed(ratio = 0.8) +
-  theme_classic()+
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #dev.off()
 
-# plot_grid(ggtree_plot, NULL,p, nrow = 1, rel_widths = c(0.5,-0.05, 1), align = 'h')
-
+# plot_grid(ggtree_plot, NULL,p, nrow = 1, rel_widths = c(0.5,-0.05, 1), align = "h")
 ```
 
 Dotplots for the **non-significant proteins**
 
 ```{r cluster-dotplots-nonsignificant, message=FALSE, warning=FALSE}
-#svg(here('outputs', '04_Dotplots', '04_dotplot_not-sign.svg'))
+#svg(here("outputs", "04_Dotplots", "04_dotplot_not-sign.svg"))
 data.long %>%
   filter(k == "not.significant") %>%
   mutate(k = factor(k)) %>%
   arrange(k) %>%
   group_by(k) %>%
-  mutate(PreyF = factor(sort(GENE))) %>% 
+  mutate(PreyF = factor(sort(GENE))) %>%
   filter(rel > 0, AVG > 0) %>%
   mutate(SaintProbability = case_when(
     SP >= 0.9 ~ "SP >= 0.9",
     SP >= 0.7 ~ "SP >= 0.7",
     TRUE ~ "ns"
   )) %>%
-  ggplot(aes(protein, PreyF))+
-  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +
-  # scale_fill_continuous(trans = 'reverse') +
-  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
-  scale_size_continuous(name = 'Relative abundance in %') +
-  scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
-  scale_x_discrete(name="Baits") +
-  scale_y_discrete(name="Preys") +
+  ggplot(aes(protein, PreyF)) +
+  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP), shape = 21) +
+  # scale_fill_continuous(trans = "reverse") +
+  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0, 50), oob = scales::squish, name = "Avg abundance") +
+  scale_size_continuous(name = "Relative abundance in %") +
+  scale_color_manual(values = c("#bbdffb", "#56B1F7", "#132B43"))+
+  scale_x_discrete(name = "Baits") +
+  scale_y_discrete(name = "Preys") +
   coord_fixed(ratio = 0.8) +
   theme_classic()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -161,7 +160,7 @@ Dotplots for individual **clusters in the heatmap (#C1-#C5)**.
 ```{r cluster-heatmap, message=FALSE, warning=FALSE}
 
 # Read the cluster data
-load(here('outputs',  '01_DEP-processing', '01_DEP-heatmap-clusters.RData'))
+load(here("outputs",  "01_DEP-processing", "01_DEP-heatmap-clusters.RData"))
 
 # Filter only relevant columns (protein + cluster assignment)
 data.heatmap.filt <- data.heatmap %>% select(protein, k)
@@ -173,29 +172,27 @@ For each cluster, grep the proteins from the heatmap and order them alphabetical
 data.long <- left_join(data.long, data.heatmap.filt, by = c("GENE" = "protein"))
 data.long$k[is.na(data.long$k)] <- "not.significant"
 
-#svg(here('outputs', '04_Dotplots', '04_dotplot_clusters.svg'))
+#svg(here("outputs", "04_Dotplots", "04_dotplot_clusters.svg"))
 data.long %>%
-#  filter(k != "not.significant") %>%
   mutate(k = factor(k)) %>%
   arrange(k) %>%
   group_by(k) %>%
-  mutate(PreyF = factor(sort(GENE))) %>% 
+  mutate(PreyF = factor(sort(GENE))) %>%
   filter(rel > 0, AVG > 0) %>%
   mutate(SaintProbability = case_when(
     SP >= 0.9 ~ "SP >= 0.9",
     SP >= 0.7 ~ "SP >= 0.7",
     TRUE ~ "ns"
   )) %>%
-  ggplot(aes(protein, PreyF))+
-  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP) , shape = 21 ) +
-  # scale_fill_continuous(trans = 'reverse') +
-  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0,50), oob = scales::squish, name = 'Avg abundance') +
-  scale_size_continuous(name = 'Relative abundance in %') +
-  scale_color_manual(values = c( '#bbdffb', "#56B1F7", "#132B43"))+
-  scale_x_discrete(name="Baits") +
-  scale_y_discrete(name="Preys") +
+  ggplot(aes(protein, PreyF)) +
+  geom_point(aes(fill = AVG, color = SaintProbability, size = rel, stroke = SP), shape = 21) +
+  scale_fill_gradientn(colours = rev(viridis::mako(20)), limits = c(0, 50), oob = scales::squish, name = "Avg abundance") +
+  scale_size_continuous(name = "Relative abundance in %") +
+  scale_color_manual(values = c("#bbdffb", "#56B1F7", "#132B43")) +
+  scale_x_discrete(name = "Baits") +
+  scale_y_discrete(name = "Preys") +
   coord_fixed(ratio = 0.8) +
-  theme_classic()+
+  theme_classic() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 #dev.off()

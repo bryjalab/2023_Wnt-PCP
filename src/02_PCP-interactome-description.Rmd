@@ -27,16 +27,16 @@ library(UpSetR)
 
 Prepare a folder for the outputs
 ```{r outputs-folder, message=FALSE, warning=FALSE}
-if (!dir.exists(here('outputs', '02_PCP-interactome-description'))){
-  dir.create(here('outputs', '02_PCP-interactome-description'))
+if (!dir.exists(here("outputs", "02_PCP-interactome-description"))) {
+  dir.create(here("outputs", "02_PCP-interactome-description"))
 }
 ```
 
 # Data input
 
 ```{r data-input, message=FALSE, warning=FALSE}
-load(here('outputs',  '01_DEP-processing', '01_DEP-df-wide.RData'))
-load(here('outputs', '01_DEP-processing', '01_DEP-results-table.RData'))
+load(here("outputs",  "01_DEP-processing", "01_DEP-df-wide.RData"))
+load(here("outputs", "01_DEP-processing", "01_DEP-results-table.RData"))
 ```
 
 # Perform a PCA on samples
@@ -54,15 +54,15 @@ tmp <- df_wide %>%
   t() %>%
   as.data.frame() %>%
   mutate(condition = c("CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1",
-                "VANGL2", "VANGL2", "DVL3", "DVL3",
-                "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
-                "VANGL2", "VANGL2", "DVL3", "DVL3",
-                "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
-                "VANGL2", "VANGL2", "DVL3", "DVL3")) 
+                       "VANGL2", "VANGL2", "DVL3", "DVL3",
+                       "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                       "VANGL2", "VANGL2", "DVL3", "DVL3",
+                       "CTRL", "CTRL", "ROR1", "ROR1", "ROR2", "ROR2", "PRICKLE1", "PRICKLE1", 
+                       "VANGL2", "VANGL2", "DVL3", "DVL3"))
 
- #svg(here('outputs', '02_PCP-interactome-description', '02_PCA-conditions.svg'))
- prcomp(tmp[, -501], center = TRUE, scale = FALSE) %>%
-    fviz_pca_ind(habillage = tmp$condition, palette = c("#8491B4FF", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF",  "#E64B35FF")) 
+#svg(here("outputs", "02_PCP-interactome-description", "02_PCA-conditions.svg"))
+prcomp(tmp[, -501], center = TRUE, scale = FALSE) %>%
+  fviz_pca_ind(habillage = tmp$condition, palette = c("#8491B4FF", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF",  "#E64B35FF"))
 # dev.off()
 ```
 
@@ -80,7 +80,7 @@ data_results <- data_results %>%
 
 Plot the barplot of upregulated proteins per bait
 ```{r upregulated-proteins-per-bait, message=FALSE, warning=FALSE}
-#svg(here('outputs', '02_PCP-interactome-description', '02_barplot-upregulated-preys-per-bait.svg'))
+#svg(here("outputs", "02_PCP-interactome-description", "02_barplot-upregulated-preys-per-bait.svg"))
 data_results %>%
   select(name, starts_with("up")) %>%
   pivot_longer(cols = up_DVL3:up_VANGL2, names_to = "bait", values_to = "upregulated") %>%
@@ -89,9 +89,9 @@ data_results %>%
   summarise(n_upregulated = sum(upregulated)) %>%
   ggplot(aes(x = reorder(bait, -n_upregulated), y = n_upregulated, fill = bait)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
-  theme_minimal(base_size = 17)+
+  theme_minimal(base_size = 17) +
   labs(x = "Bait", y = "Number of upregulated preys") +
-  scale_fill_manual(values = c( "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF",  "#E64B35FF"))
+  scale_fill_manual(values = c("4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF", "#E64B35FF"))
 #dev.off()
 ```
 
@@ -99,7 +99,7 @@ data_results %>%
 
 UpSet plot of upregulated preys in particular baits.
 ```{r  upset-plot, message=FALSE, warning=FALSE}
-#svg(here('outputs', '02_PCP-interactome-description', '02_upsetPlot-upregulated-preys.svg'))
+#svg(here("outputs", "02_PCP-interactome-description", "02_upsetPlot-upregulated-preys.svg"))
 data_results %>%
   select(starts_with("up_")) %>%
   rename_with(~ sub("up_", "", .x), everything()) %>%
@@ -113,7 +113,7 @@ In order to determine whether interactions of particular bait happen in a specif
 
 ```{r human-cell-map, message=FALSE, warning=FALSE}
 # Data input for Human Cell Map:
-hcm <- read.delim(here('data', 'preys-latest.txt'))
+hcm <- read.delim(here("data", "preys-latest.txt"))
 
 # Map onto the Human Cell Map
 data.hcm <- data_results %>%
@@ -134,14 +134,14 @@ data.hcm <- data.hcm %>%
                names_to = "bait",
                values_to = "significant")
 
-#svg(here('outputs', '02_PCP-interactome-description', '02_facetBarplot-humancellmap_multicolor.svg'))
+#svg(here("outputs", "02_PCP-interactome-description", "02_facetBarplot-humancellmap_multicolor.svg"))
 data.hcm %>%
   group_by(bait, NMF.loc) %>%
   summarise(n_preys = sum(significant)) %>%
   filter(n_preys != 0) %>%
   mutate(top_loc = case_when(
-    n_preys == max(n_preys) ~ "max",
-    TRUE ~ "")
+                            n_preys == max(n_preys) ~ "max",
+                            TRUE ~ "")
   ) %>%
   mutate(top_localization = case_when(
     top_loc == "max" & bait == "DVL3" ~ "DVL3",
@@ -150,17 +150,15 @@ data.hcm %>%
     top_loc == "max" & bait == "PRICKLE1" ~ "PRICKLE1",
     top_loc == "max" & bait == "VANGL2" ~ "VANGL2",
     TRUE ~ ""
-      )) %>%
+  )) %>%
   ggplot(aes(x = NMF.loc, y = n_preys, fill = top_localization)) +
-  geom_bar(stat = "identity")+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 45, hjust=1)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x = "Prey localization in Human Cell Map",
-       y = "Number of preys") + 
-  facet_grid(bait ~ .) + 
-  scale_fill_manual(values = c("#b8B8B8", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF","#E64B35FF" ))
+       y = "Number of preys") +
+  facet_grid(bait ~ .) +
+  scale_fill_manual(values = c("#b8B8B8", "4DBBD5FF", "#00A087FF", "#3C5488FF", "#F39B7FFF", "#E64B35FF" ))
 #dev.off()
-
-
 ```
 

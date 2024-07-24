@@ -1,4 +1,4 @@
-# Planar cell polarity (PCP) protein interactomics identifies multiple membrane-associated actomyosin regulators as novel PCP pathway downstream effectors
+# Proximity interactomics identifies RAI14, EPHA2 and PHACTR4 as essential components of Wnt/planar cell polarity pathway in vertebrates.
 
 ## Authors
 Kristína Gömöryová<sup>1†</sup>, Nikodém Zezula<sup>1†</sup>, Tomasz W. Radaszkiewicz<sup>1†^</sup>, Petra Paclíková<sup>1</sup>, Štěpán Čada<sup>1</sup>, Kateřina Hanáková<sup>2</sup>, Miroslav Micka<sup>1</sup>, David Potěšil<sup>2</sup>, Zbyněk Zdráhal<sup>2</sup>, and Vítězslav Bryja<sup>1,3*</sup>

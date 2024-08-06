@@ -16,7 +16,7 @@ Kristína Gömöryová<sup>1†</sup>, Nikodém Zezula<sup>1†</sup>, Tomasz W.
 <sup>*</sup> Corresponding author: bryja@sci.muni.cz
 
 
-This repository accompanies the above-mentioned manuscript and provides scripts to reproduce some of the manuscript figures (the ones created in R).
+This repository accompanies the above-mentioned manuscript and provides scripts to reproduce some of the manuscript figures (the ones created in R and Python).
 
 ## Reproducing the manuscript figures
 
@@ -34,5 +34,6 @@ Scripts are located within the `src` folder:
 - 04-Dotplots.Rmd (*Fig. 2B*, *Suppl. Fig. 2A*, *Suppl. Fig. 2B*)
 - 05_Clusters-humancellmap.Rmd (*Fig. 2C*)
 - 06_miniTurboID.Rmd (*Fig. 4C*, *Fig. 4D*, *Suppl. Fig. 4C*, *Suppl. Fig. 4D*)
+- 07_RosePlots_LevanesTest.py (*Fig. 3F*, *Fig. 3G*)
 
-All analyses were performed using R version 4.3.1 on the platform x86_64-w64-mingw32/x64 (64-bit).
+All analyses were performed using R version 4.3.1 on the platform x86_64-w64-mingw32/x64 (64-bit) and python 3.12 on the same platform.
